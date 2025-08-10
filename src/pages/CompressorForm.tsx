@@ -235,7 +235,7 @@ export default function CompressorForm() {
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
           backgroundAttachment: 'fixed',
-          filter: 'blur(2px)'
+          filter: 'blur(3px)'
         }}
       />
       
@@ -345,6 +345,7 @@ export default function CompressorForm() {
                         type="file" 
                         accept="image/*" 
                         onChange={(e) => handleCompanyPhotoUpload(e.target.files?.[0] || null)} 
+                        disabled={form.companyPhotoUploading}
                       />
                     </div>
                     <div className="w-80 h-48 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
@@ -358,6 +359,18 @@ export default function CompressorForm() {
                       />
                     </div>
                   </div>
+                  {form.companyPhotoUploading && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm text-gray-600">
+                        <span>Uploading...</span>
+                        <span>Please wait</span>
+                      </div>
+                      <Progress value={100} className="h-2" />
+                    </div>
+                  )}
+                  {form.companyPhotoError && (
+                    <p className="text-red-600 text-sm">{form.companyPhotoError}</p>
+                  )}
                   {form.companyPhotoLink && <a href={form.companyPhotoLink} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">View uploaded company photo</a>}
                 </div>
               </div>
@@ -464,6 +477,7 @@ export default function CompressorForm() {
                             type="file" 
                             accept="image/*" 
                             onChange={(e) => handleUpload(idx, e.target.files?.[0] || null)} 
+                            disabled={comp.uploading}
                           />
                         </div>
                         <div className="w-80 h-48 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
@@ -477,6 +491,18 @@ export default function CompressorForm() {
                           />
                         </div>
                       </div>
+                      {comp.uploading && (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-sm text-gray-600">
+                            <span>Uploading...</span>
+                            <span>Please wait</span>
+                          </div>
+                          <Progress value={100} className="h-2" />
+                        </div>
+                      )}
+                      {comp.uploadError && (
+                        <p className="text-red-600 text-sm">{comp.uploadError}</p>
+                      )}
                       {comp.photoLink && <a href={comp.photoLink} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">View uploaded photo</a>}
                     </div>
                   </div>
