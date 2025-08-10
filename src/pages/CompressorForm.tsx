@@ -30,11 +30,11 @@ const NAMES = [
 ];
 
 const BRANDS = [
-  { value: "Chicago Pneumatic (CP)", label: "Chicago Pneumatic (CP)" },
-  { value: "Atlas Copco (AC)", label: "Atlas Copco (AC)" },
+  { value: "Chicago Pneumatic ", label: "Chicago Pneumatic-CP" },
+  { value: "Atlas Copco ", label: "Atlas Copco-AC" },
   { value: "Elgi", label: "Elgi" },
   { value: "Kirloskar", label: "Kirloskar" },
-  { value: "Ingersoll Rand (IR)", label: "Ingersoll Rand (IR)" },
+  { value: "Ingersoll Rand ", label: "Ingersoll Rand - IR" },
   { value: "Boge", label: "Boge" },
   { value: "Other", label: "Other" },
 ];
