@@ -113,6 +113,7 @@ const defaultForm: FormDataShape = {
   ],
 };
 
+// Modified PhotoUploader to log file details
 function PhotoUploader({
   multiple = false,
   onFilesSelected,
@@ -138,7 +139,10 @@ function PhotoUploader({
             type="file" 
             accept="image/*" 
             multiple={multiple}
-            onChange={(e) => onFilesSelected(e.target.files)}
+            onChange={(e) => {
+              console.log("Desktop file selected:", Array.from(e.target.files || []).map(f => ({ name: f.name, type: f.type, size: f.size })));
+              onFilesSelected(e.target.files);
+            }}
             disabled={disabled}
           />
         </div>
@@ -157,7 +161,6 @@ function PhotoUploader({
     );
   }
 
-  // Mobile version
   return (
     <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
       <div className="flex-1 w-full space-y-2">
@@ -182,7 +185,10 @@ function PhotoUploader({
           multiple={false}
           ref={captureRef} 
           style={{ display: 'none' }} 
-          onChange={(e) => onFilesSelected(e.target.files)} 
+          onChange={(e) => {
+            console.log("Camera file selected:", Array.from(e.target.files || []).map(f => ({ name: f.name, type: f.type, size: f.size })));
+            onFilesSelected(e.target.files);
+          }} 
         />
         <input 
           type="file" 
@@ -190,7 +196,10 @@ function PhotoUploader({
           multiple={multiple}
           ref={galleryRef} 
           style={{ display: 'none' }} 
-          onChange={(e) => onFilesSelected(e.target.files)} 
+          onChange={(e) => {
+            console.log("Gallery file selected:", Array.from(e.target.files || []).map(f => ({ name: f.name, type: f.type, size: f.size })));
+            onFilesSelected(e.target.files);
+          }} 
         />
       </div>
       <div className="flex flex-col items-center w-full md:w-auto">
@@ -300,25 +309,54 @@ export default function CompressorForm() {
   };
   const onBack = () => setStep((s) => Math.max(1, s - 1));
 
-  const uploadBase64 = async (file: File): Promise<string> => {
+// Modified uploadBase64 to normalize filename and improve error handling
+const uploadBase64 = async (file: File): Promise<string> => {
+  try {
     const base64 = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve((reader.result as string).split(",")[1]);
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
-    const payload = { filename: file.name, mimeType: file.type, data: base64 };
+
+    // Normalize filename for camera photos
+    const filename = file.name && file.name !== "image.jpg" ? file.name : `camera-photo-${Date.now()}.jpg`;
+    const payload = { filename, mimeType: file.type || "image/jpeg", data: base64 };
+    console.log("Uploading file:", { filename, mimeType: file.type, size: file.size });
+
     const res = await fetch("/api/upload", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
+
+    console.log("Server response status:", res.status, res.statusText);
+
+    if (!res.ok) {
+      const text = await res.text();
+      console.error("Server error response:", text);
+      throw new Error(`Server returned ${res.status}: ${text}`);
+    }
+
+    const contentType = res.headers.get("content-type");
+    if (!contentType?.includes("application/json")) {
+      const text = await res.text();
+      console.error("Non-JSON response:", text);
+      throw new Error(`Server returned non-JSON response: ${text}`);
+    }
+
     const data = await res.json();
     if (data.status === "success" && data.link) {
       return data.link;
     }
+
+    console.error("Upload failed with data:", data);
     throw new Error(data.message || "Upload failed");
-  };
+  } catch (err: any) {
+    console.error("Upload error:", err);
+    throw err;
+  }
+};
 
   const handleMultipleUploads = async (index: number, files: FileList | null) => {
     if (!files || files.length === 0) return;
