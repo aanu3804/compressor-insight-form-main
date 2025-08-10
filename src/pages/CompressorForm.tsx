@@ -105,7 +105,7 @@ const defaultForm: FormDataShape = {
     contactNumber: "",
   },
   companyPhotoLinks: [],
-  companyPhotoUploading: false;
+  companyPhotoUploading: false,
   companyPhotoError: null,
   compressorCount: "1",
   compressors: [
