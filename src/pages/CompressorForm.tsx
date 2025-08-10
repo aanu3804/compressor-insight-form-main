@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 
-const GAS_UPLOAD_URL = "https://script.google.com/macros/s/AKfycbwR0CU9AATBHzUgxmCj1nOHxIVg1aep1HyvULT0_q6cRT_QIE0oPfeyA-YHb5ahaXudNA/exec"; // tested Postman API URL
+const GAS_UPLOAD_URL = "https://script.google.com/macros/s/AKfycbwR0CU9AATBHzUgxmCj1nOHxIVg1aep1HyvULT0_q6cRT_QIE0oPfeyA-YHb5ahaXudNA/exec";
 const MAX_STEPS = 4;
 const STORAGE_KEY = "compressorFormData";
 const STORAGE_STEP_KEY = "compressorFormStep";
@@ -48,7 +48,7 @@ type CompressorDetail = {
   year: string;
   runningHours: string;
   loadingHours: string;
-  remarks : string,
+  remarks: string;
   photoLinks?: string[];
   uploading?: boolean;
   uploadError?: string | null;
@@ -88,7 +88,6 @@ const defaultForm: FormDataShape = {
   compressors: [
     { brand: "", otherBrandName: "", size: "", year: "", runningHours: "", loadingHours: "", photoLinks: [], remarks: "" },
   ],
-
 };
 
 export default function CompressorForm() {
@@ -105,7 +104,6 @@ export default function CompressorForm() {
 
   const progress = useMemo(() => (step / MAX_STEPS) * 100, [step]);
 
-  // Autosave
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(form));
   }, [form]);
@@ -113,7 +111,6 @@ export default function CompressorForm() {
     localStorage.setItem(STORAGE_STEP_KEY, String(step));
   }, [step]);
 
-  // Adjust compressors array when count changes
   useEffect(() => {
     if (form.compressorCount === "more") return;
     const n = Number(form.compressorCount || 0);
@@ -132,7 +129,48 @@ export default function CompressorForm() {
     });
   }, [form.compressorCount]);
 
+  const validateStep = () => {
+    if (step === 1) {
+      if (!form.name || !form.date) {
+        toast.error("Please fill all fields in Step 1.");
+        return false;
+      }
+    }
+    if (step === 2) {
+      const c = form.customer;
+      if (!c.companyName || !c.address || !c.pincode || !c.contactPerson || !c.contactNumber || (form.companyPhotoLinks?.length || 0) === 0) {
+        toast.error("Please fill all fields in Step 2 and upload a company photo.");
+        return false;
+      }
+    }
+    if (step === 3) {
+      if (!form.compressorCount) {
+        toast.error("Please select the number of compressors.");
+        return false;
+      }
+    }
+    if (step === 4) {
+      for (let i = 0; i < form.compressors.length; i++) {
+        const comp = form.compressors[i];
+        if (
+          !comp.brand ||
+          (comp.brand === "Other" && !comp.otherBrandName) ||
+          !comp.size ||
+          !comp.year ||
+          !comp.runningHours ||
+          !comp.loadingHours ||
+          (comp.photoLinks?.length || 0) === 0
+        ) {
+          toast.error(`Please fill all required fields for Compressor ${i + 1} and upload at least one photo.`);
+          return false;
+        }
+      }
+    }
+    return true;
+  };
+
   const onNext = () => {
+    if (!validateStep()) return;
     if (step === 3 && form.compressorCount === "more") {
       navigate("/contact-pradeep");
       return;
@@ -141,7 +179,6 @@ export default function CompressorForm() {
   };
   const onBack = () => setStep((s) => Math.max(1, s - 1));
 
-  // Convert file to base64 and send as JSON to GAS
   const uploadBase64 = async (file: File): Promise<string> => {
     const base64 = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
@@ -149,19 +186,12 @@ export default function CompressorForm() {
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
-
-    const payload = {
-      filename: file.name,
-      mimeType: file.type,
-      data: base64
-    };
-
+    const payload = { filename: file.name, mimeType: file.type, data: base64 };
     const res = await fetch("/api/upload", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
-
     const data = await res.json();
     if (data.status === "success" && data.link) {
       return data.link;
@@ -171,31 +201,26 @@ export default function CompressorForm() {
 
   const handleMultipleUploads = async (index: number, files: FileList | null) => {
     if (!files || files.length === 0) return;
-  
     setForm((prev) => {
       const copy = [...prev.compressors];
       copy[index] = { ...copy[index], uploading: true, uploadError: null };
       return { ...prev, compressors: copy };
     });
-  
     try {
       const uploadedLinks: string[] = [];
-  
       for (let i = 0; i < files.length; i++) {
         const link = await uploadBase64(files[i]);
         uploadedLinks.push(link);
       }
-  
       setForm((prev) => {
         const copy = [...prev.compressors];
-        copy[index] = { 
-          ...copy[index], 
-          photoLinks: [...(prev.compressors[index].photoLinks || []), ...uploadedLinks], 
-          uploading: false 
+        copy[index] = {
+          ...copy[index],
+          photoLinks: [...(prev.compressors[index].photoLinks || []), ...uploadedLinks],
+          uploading: false
         };
         return { ...prev, compressors: copy };
       });
-  
       toast.success(`${uploadedLinks.length} photo(s) uploaded`);
     } catch (err: any) {
       setForm((prev) => {
@@ -207,37 +232,9 @@ export default function CompressorForm() {
     }
   };
 
-  
-  const handleUpload = async (index: number, file: File | null) => {
-    if (!file) return;
-    setForm((prev) => {
-      const copy = [...prev.compressors];
-      copy[index] = { ...copy[index], uploading: true, uploadError: null };
-      return { ...prev, compressors: copy };
-    });
-
-    try {
-      const link = await uploadBase64(file);
-      setForm((prev) => {
-        const copy = [...prev.compressors];
-        copy[index] = { ...copy[index], photoLinks: [...(prev.compressors[index].photoLinks || []), link], uploading: false };
-        return { ...prev, compressors: copy };
-      });
-      toast.success("Photo uploaded");
-    } catch (err: any) {
-      setForm((prev) => {
-        const copy = [...prev.compressors];
-        copy[index] = { ...copy[index], uploading: false, uploadError: err?.message || "Upload error" };
-        return { ...prev, compressors: copy };
-      });
-      toast.error("Upload failed. Please try again.");
-    }
-  };
-
   const handleCompanyPhotoUpload = async (file: File | null) => {
     if (!file) return;
     setForm((prev) => ({ ...prev, companyPhotoUploading: true, companyPhotoError: null }));
-
     try {
       const link = await uploadBase64(file);
       setForm((prev) => ({
@@ -245,18 +242,16 @@ export default function CompressorForm() {
         companyPhotoLinks: [...(prev.companyPhotoLinks || []), link],
         companyPhotoUploading: false
       }));
-
       toast.success("Company photo uploaded");
     } catch (err: any) {
       setForm((prev) => ({ ...prev, companyPhotoUploading: false, companyPhotoError: err?.message || "Upload error" }));
       toast.error("Company photo upload failed. Please try again.");
-      console.log(err.message);
     }
   };
 
   const handleSubmit = async () => {
+    if (!validateStep()) return;
     try {
-      // Prepare data for Google Sheets
       const submissionData = {
         name: form.name,
         date: form.date,
@@ -265,18 +260,12 @@ export default function CompressorForm() {
         compressorCount: form.compressorCount,
         compressors: form.compressors
       };
-
-      // Submit through API proxy (like photo upload)
       const response = await fetch("/api/submit", {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(submissionData)
       });
-
       const result = await response.json();
-      
       if (result.status === 'success') {
         toast.success("Form submitted successfully!");
         setSuccessOpen(true);
