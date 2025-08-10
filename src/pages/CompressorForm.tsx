@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 
-const GAS_UPLOAD_URL = "YOUR_WORKING_GAS_URL"; // tested Postman API URL
+const GAS_UPLOAD_URL = "https://script.google.com/macros/s/AKfycbwR0CU9AATBHzUgxmCj1nOHxIVg1aep1HyvULT0_q6cRT_QIE0oPfeyA-YHb5ahaXudNA/exec"; // tested Postman API URL
 const MAX_STEPS = 4;
 const STORAGE_KEY = "compressorFormData";
 const STORAGE_STEP_KEY = "compressorFormStep";
