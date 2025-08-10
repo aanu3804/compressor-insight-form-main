@@ -169,6 +169,45 @@ export default function CompressorForm() {
     throw new Error(data.message || "Upload failed");
   };
 
+  const handleMultipleUploads = async (index: number, files: FileList | null) => {
+    if (!files || files.length === 0) return;
+  
+    setForm((prev) => {
+      const copy = [...prev.compressors];
+      copy[index] = { ...copy[index], uploading: true, uploadError: null };
+      return { ...prev, compressors: copy };
+    });
+  
+    try {
+      const uploadedLinks: string[] = [];
+  
+      for (let i = 0; i < files.length; i++) {
+        const link = await uploadBase64(files[i]);
+        uploadedLinks.push(link);
+      }
+  
+      setForm((prev) => {
+        const copy = [...prev.compressors];
+        copy[index] = { 
+          ...copy[index], 
+          photoLinks: [...(prev.compressors[index].photoLinks || []), ...uploadedLinks], 
+          uploading: false 
+        };
+        return { ...prev, compressors: copy };
+      });
+  
+      toast.success(`${uploadedLinks.length} photo(s) uploaded`);
+    } catch (err: any) {
+      setForm((prev) => {
+        const copy = [...prev.compressors];
+        copy[index] = { ...copy[index], uploading: false, uploadError: err?.message || "Upload error" };
+        return { ...prev, compressors: copy };
+      });
+      toast.error("One or more uploads failed");
+    }
+  };
+
+  
   const handleUpload = async (index: number, file: File | null) => {
     if (!file) return;
     setForm((prev) => {
@@ -533,7 +572,8 @@ export default function CompressorForm() {
                             id={`photo-${idx}`}
                             type="file" 
                             accept="image/*" 
-                            onChange={(e) => handleUpload(idx, e.target.files?.[0] || null)} 
+                            multiple
+                            onChange={(e) => handleMultipleUploads(idx, e.target.files)} 
                             disabled={comp.uploading}
                           />
                         </div>
