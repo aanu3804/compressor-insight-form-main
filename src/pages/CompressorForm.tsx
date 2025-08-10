@@ -49,7 +49,7 @@ type CompressorDetail = {
   runningHours: string;
   loadingHours: string;
   remarks : string,
-  photoLink?: string;
+  photoLinks?: string[];
   uploading?: boolean;
   uploadError?: string | null;
 };
@@ -64,7 +64,7 @@ type FormDataShape = {
     contactPerson: string;
     contactNumber: string;
   };
-  companyPhotoLink?: string;
+  companyPhotoLinks?: string[];
   companyPhotoUploading?: boolean;
   companyPhotoError?: string | null;
   compressorCount: string;
@@ -180,7 +180,7 @@ export default function CompressorForm() {
       const link = await uploadBase64(file);
       setForm((prev) => {
         const copy = [...prev.compressors];
-        copy[index] = { ...copy[index], photoLink: link, uploading: false };
+        copy[index] = { ...copy[index], photoLinks: [...(prev.compressors[index].photoLinks || []), link], uploading: false };
         return { ...prev, compressors: copy };
       });
       toast.success("Photo uploaded");
