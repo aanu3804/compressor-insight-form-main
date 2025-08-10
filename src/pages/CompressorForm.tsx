@@ -371,7 +371,20 @@ export default function CompressorForm() {
                   {form.companyPhotoError && (
                     <p className="text-red-600 text-sm">{form.companyPhotoError}</p>
                   )}
-                  {form.companyPhotoLink && <a href={form.companyPhotoLink} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">View uploaded company photo</a>}
+                  {form.companyPhotoLink && (
+                    <div className="flex items-center gap-4">
+                      <a href={form.companyPhotoLink} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
+                        View uploaded company photo
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => setForm(prev => ({ ...prev, companyPhotoLink: "" }))}
+                        className="text-red-600 hover:text-red-800 hover:underline text-sm"
+                      >
+                        Remove photo
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -503,7 +516,20 @@ export default function CompressorForm() {
                       {comp.uploadError && (
                         <p className="text-red-600 text-sm">{comp.uploadError}</p>
                       )}
-                      {comp.photoLink && <a href={comp.photoLink} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">View uploaded photo</a>}
+                      {comp.photoLink && (
+                        <div className="flex items-center gap-4">
+                          <a href={comp.photoLink} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
+                            View uploaded photo
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => updateCompressor(idx, { photoLink: "" })}
+                            className="text-red-600 hover:text-red-800 hover:underline text-sm"
+                          >
+                            Remove photo
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
