@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import {
@@ -105,7 +105,7 @@ const defaultForm: FormDataShape = {
     contactNumber: "",
   },
   companyPhotoLinks: [],
-  companyPhotoUploading: false,
+  companyPhotoUploading: false;
   companyPhotoError: null,
   compressorCount: "1",
   compressors: [
@@ -321,6 +321,50 @@ const handleSubmit = async () => {
     });
   }
 
+  const FilePicker = ({ id, onChange, disabled, multiple, label }) => {
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleCameraClick = () => {
+      if (fileInputRef.current) {
+        fileInputRef.current.setAttribute("capture", "environment"); // Camera
+        fileInputRef.current.click();
+      }
+    };
+
+    const handleGalleryClick = () => {
+      if (fileInputRef.current) {
+        fileInputRef.current.removeAttribute("capture"); // Gallery or file picker
+        fileInputRef.current.click();
+      }
+    };
+
+    return (
+      <div className="space-y-2">
+        <Label htmlFor={id}>{label}</Label>
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+          <div className="flex-1 w-full space-y-2">
+            <Button onClick={handleCameraClick} disabled={disabled} className="w-full md:w-auto">
+              Take Photo
+            </Button>
+            <Button onClick={handleGalleryClick} disabled={disabled} className="w-full md:w-auto">
+              Choose from Gallery
+            </Button>
+            <input
+              ref={fileInputRef}
+              id={id}
+              type="file"
+              accept="image/*"
+              multiple={multiple}
+              onChange={onChange}
+              disabled={disabled}
+              className="hidden" // Hide the default input
+            />
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="relative min-h-screen">
       {/* Blurred Background Layer */}
@@ -409,95 +453,83 @@ const handleSubmit = async () => {
             )}
 
             {/* Step 2 */}
-            {step === 2 && (
-              <div className="grid gap-6">
-                <div className="grid gap-2">
-                  <Label htmlFor="companyName">Company name</Label>
-                  <Input id="companyName" value={form.customer.companyName} onChange={(e) => setForm({ ...form, customer: { ...form.customer, companyName: e.target.value } })} />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="address">Company address</Label>
-                  <Textarea id="address" value={form.customer.address} onChange={(e) => setForm({ ...form, customer: { ...form.customer, address: e.target.value } })} />
-                </div>
-                <div className="grid gap-2 sm:grid-cols-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="pincode">Pincode</Label>
-                    <Input id="pincode" value={form.customer.pincode} onChange={(e) => setForm({ ...form, customer: { ...form.customer, pincode: e.target.value } })} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="contactPerson">Contact Person</Label>
-                    <Input id="contactPerson" value={form.customer.contactPerson} onChange={(e) => setForm({ ...form, customer: { ...form.customer, contactPerson: e.target.value } })} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="contactNumber">Contact Number</Label>
-                    <Input id="contactNumber" value={form.customer.contactNumber} onChange={(e) => setForm({ ...form, customer: { ...form.customer, contactNumber: e.target.value } })} />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="companyPhoto">Company Photo</Label>
-                  <div className="flex items-center gap-4">
-                    <div className="flex-1">
-                      <Input 
-                        id="companyPhoto" 
-                        type="file" 
-                        accept="image/*" 
-                        onChange={(e) => handleCompanyPhotoUpload(e.target.files?.[0] || null)} 
-                        disabled={form.companyPhotoUploading}
-                      />
-                    </div>
-                    {/* Reference Photo label */}
-                    <div className="flex flex-col items-center">
-                      <span className="text-sm font-semibold mb-1 text-gray-700">Reference Photo</span>
-                      <div className="w-80 h-48 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
-                        <img 
-                          src="companyimg.jpg" 
-                          alt="Reference" 
-                          className="w-76 h-44 object-cover rounded"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  {form.companyPhotoUploading && (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm text-gray-600">
-                        <span>Uploading...</span>
-                        <span>Please wait</span>
-                      </div>
-                      <Progress value={100} className="h-2" />
-                    </div>
-                  )}
-                  {form.companyPhotoError && (
-                    <p className="text-red-600 text-sm">{form.companyPhotoError}</p>
-                  )}
-              {form.companyPhotoLinks?.length > 0 && (
-                <div className="space-y-2">
-                  {form.companyPhotoLinks.map((link, i) => (
-                    <div key={i} className="flex items-center gap-4">
-                      <a href={link} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
-                        View uploaded company photo {i + 1}
-                      </a>
-                      <button
-                        type="button"
-                        onClick={() => setForm(prev => ({
-                          ...prev,
-                          companyPhotoLinks: prev.companyPhotoLinks.filter((_, idx) => idx !== i)
-                        }))}
-                        className="text-red-600 hover:text-red-800 hover:underline text-sm"
-                      >
-                        Remove photo
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-                </div>
-              </div>
-            )}
-
+{step === 2 && (
+  <div className="grid gap-6">
+    <div className="grid gap-2">
+      <Label htmlFor="companyName">Company name</Label>
+      <Input id="companyName" value={form.customer.companyName} onChange={(e) => setForm({ ...form, customer: { ...form.customer, companyName: e.target.value } })} />
+    </div>
+    <div className="grid gap-2">
+      <Label htmlFor="address">Company address</Label>
+      <Textarea id="address" value={form.customer.address} onChange={(e) => setForm({ ...form, customer: { ...form.customer, address: e.target.value } })} />
+    </div>
+    <div className="grid gap-2 sm:grid-cols-3">
+      <div className="space-y-2">
+        <Label htmlFor="pincode">Pincode</Label>
+        <Input id="pincode" value={form.customer.pincode} onChange={(e) => setForm({ ...form, customer: { ...form.customer, pincode: e.target.value } })} />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="contactPerson">Contact Person</Label>
+        <Input id="contactPerson" value={form.customer.contactPerson} onChange={(e) => setForm({ ...form, customer: { ...form.customer, contactPerson: e.target.value } })} />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="contactNumber">Contact Number</Label>
+        <Input id="contactNumber" value={form.customer.contactNumber} onChange={(e) => setForm({ ...form, customer: { ...form.customer, contactNumber: e.target.value } })} />
+      </div>
+    </div>
+    <FilePicker
+      id="companyPhoto"
+      onChange={(e) => handleCompanyPhotoUpload(e.target.files?.[0] || null)}
+      disabled={form.companyPhotoUploading}
+      multiple={false}
+      label="Company Photo"
+    />
+    <div className="flex flex-col items-center w-full md:w-auto">
+      <span className="text-sm font-semibold mb-1 text-gray-700">Reference Photo</span>
+      <div className="w-full md:w-80 h-48 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+        <img 
+          src="companyimg.jpg" 
+          alt="Reference" 
+          className="w-full md:w-72 h-auto md:h-44 object-contain md:object-cover rounded"
+          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+        />
+      </div>
+    </div>
+    {form.companyPhotoUploading && (
+      <div className="space-y-2">
+        <div className="flex items-center justify-between text-sm text-gray-600">
+          <span>Uploading...</span>
+          <span>Please wait</span>
+        </div>
+        <Progress value={100} className="h-2" />
+      </div>
+    )}
+    {form.companyPhotoError && (
+      <p className="text-red-600 text-sm">{form.companyPhotoError}</p>
+    )}
+    {form.companyPhotoLinks?.length > 0 && (
+      <div className="space-y-2">
+        {form.companyPhotoLinks.map((link, i) => (
+          <div key={i} className="flex items-center gap-4">
+            <a href={link} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
+              View uploaded company photo {i + 1}
+            </a>
+            <button
+              type="button"
+              onClick={() => setForm(prev => ({
+                ...prev,
+                companyPhotoLinks: prev.companyPhotoLinks.filter((_, idx) => idx !== i)
+              }))}
+              className="text-red-600 hover:text-red-800 hover:underline text-sm"
+            >
+              Remove photo
+            </button>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+)}
             {/* Step 3 */}
             {step === 3 && (
               <div className="space-y-2">
@@ -522,7 +554,6 @@ const handleSubmit = async () => {
                 {form.compressors.map((comp, idx) => (
                   <div key={idx} className="rounded-md border p-4 space-y-4">
                     <h3 className="text-lg font-semibold">Compressor {idx + 1}</h3>
-                    
                     <div className="space-y-2">
                       <Label htmlFor={`brand-${idx}`}>Brand</Label>
                       <Select value={comp.brand} onValueChange={(v) => updateCompressor(idx, { brand: v, ...(v !== "Other" ? { otherBrandName: "" } : {}) })}>
@@ -532,7 +563,6 @@ const handleSubmit = async () => {
                         </SelectContent>
                       </Select>
                     </div>
-                    
                     {comp.brand === "Other" && (
                       <div className="space-y-2">
                         <Label htmlFor={`otherBrand-${idx}`}>Other Brand Name</Label>
@@ -543,8 +573,6 @@ const handleSubmit = async () => {
                         />
                       </div>
                     )}
-
-                    
                     <div className="space-y-2">
                       <Label htmlFor={`model-${idx}`}>Model</Label>
                       <Input 
@@ -553,8 +581,6 @@ const handleSubmit = async () => {
                         onChange={(e) => updateCompressor(idx, { model: e.target.value })} 
                       />
                     </div>
-
-                    
                     <div className="space-y-2">
                       <Label htmlFor={`size-${idx}`}>Size</Label>
                       <Select value={comp.size} onValueChange={(v) => updateCompressor(idx, { size: v })}>
@@ -564,7 +590,6 @@ const handleSubmit = async () => {
                         </SelectContent>
                       </Select>
                     </div>
-                    
                     <div className="space-y-2">
                       <Label htmlFor={`year-${idx}`}>Year</Label>
                       <Input 
@@ -573,7 +598,6 @@ const handleSubmit = async () => {
                         onChange={(e) => updateCompressor(idx, { year: e.target.value })} 
                       />
                     </div>
-                    
                     <div className="space-y-2">
                       <Label htmlFor={`runningHours-${idx}`}>Running Hours</Label>
                       <Input 
@@ -582,7 +606,6 @@ const handleSubmit = async () => {
                         onChange={(e) => updateCompressor(idx, { runningHours: e.target.value })} 
                       />
                     </div>
-                    
                     <div className="space-y-2">
                       <Label htmlFor={`loadingHours-${idx}`}>Loading Hours</Label>
                       <Input 
@@ -591,7 +614,6 @@ const handleSubmit = async () => {
                         onChange={(e) => updateCompressor(idx, { loadingHours: e.target.value })} 
                       />
                     </div>
-                    
                     <div className="space-y-2">
                       <Label htmlFor={`remarks-${idx}`}>Remarks</Label>
                       <Input 
@@ -600,47 +622,36 @@ const handleSubmit = async () => {
                         onChange={(e) => updateCompressor(idx, { remarks: e.target.value })} 
                       />
                     </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor={`photo-${idx}`}>Compressor Photo</Label>
-                      <div className="flex items-center gap-4">
-                        <div className="flex-1">
-                          <Input 
-                            id={`photo-${idx}`}
-                            type="file" 
-                            accept="image/*" 
-                            multiple
-                            onChange={(e) => handleMultipleUploads(idx, e.target.files)} 
-                            disabled={comp.uploading}
-                          />
-                        </div>
-                          {/* Reference Photo label */}
-                          <div className="flex flex-col items-center">
-                            <span className="text-sm font-semibold mb-1 text-gray-700">Reference Photo</span>
-                            <div className="w-80 h-48 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
-                              <img 
-                                src="compressor.png" 
-                                alt="Reference" 
-                                className="w-76 h-44 object-cover rounded"
-                                onError={(e) => {
-                                  e.currentTarget.style.display = 'none';
-                                }}
-                              />
-                            </div>
-                          </div>
+                    <FilePicker
+                      id={`photo-${idx}`}
+                      onChange={(e) => handleMultipleUploads(idx, e.target.files)}
+                      disabled={comp.uploading}
+                      multiple={true}
+                      label="Compressor Photo"
+                    />
+                    <div className="flex flex-col items-center w-full md:w-auto">
+                      <span className="text-sm font-semibold mb-1 text-gray-700">Reference Photo</span>
+                      <div className="w-full md:w-80 h-48 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+                        <img 
+                          src="compressor.png" 
+                          alt="Reference" 
+                          className="w-full md:w-72 h-auto md:h-44 object-contain md:object-cover rounded"
+                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                        />
                       </div>
-                      {comp.uploading && (
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between text-sm text-gray-600">
-                            <span>Uploading...</span>
-                            <span>Please wait</span>
-                          </div>
-                          <Progress value={100} className="h-2" />
+                    </div>
+                    {comp.uploading && (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm text-gray-600">
+                          <span>Uploading...</span>
+                          <span>Please wait</span>
                         </div>
-                      )}
-                      {comp.uploadError && (
-                        <p className="text-red-600 text-sm">{comp.uploadError}</p>
-                      )}
+                        <Progress value={100} className="h-2" />
+                      </div>
+                    )}
+                    {comp.uploadError && (
+                      <p className="text-red-600 text-sm">{comp.uploadError}</p>
+                    )}
                     {comp.photoLinks?.length > 0 && (
                       <div className="space-y-2">
                         {comp.photoLinks.map((link, i) => (
@@ -661,8 +672,6 @@ const handleSubmit = async () => {
                         ))}
                       </div>
                     )}
-
-                    </div>
                   </div>
                 ))}
               </div>
