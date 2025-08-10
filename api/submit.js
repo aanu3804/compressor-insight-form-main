@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     }
 
     // YOUR Google Apps Script submit URL (replace with your actual GAS URL for form submission)
-    const GAS_SUBMIT_URL = "https://script.google.com/macros/s/YOUR_SUBMIT_SCRIPT_ID/exec";
+    const GAS_SUBMIT_URL = "https://script.google.com/macros/s/AKfycbwr1lRaKUpjLKOb_PtwIMtB9dLGzECPAX24CDkE3xiJmgwu0GyJ4u1JWkk7jLfH1Jao1g/exec";
 
     // Forward the form data to GAS
     const forwardRes = await fetch(GAS_SUBMIT_URL, {
@@ -35,4 +35,5 @@ export default async function handler(req, res) {
     console.error("Submit proxy error:", err);
     return res.status(500).json({ status: "error", message: err.toString() });
   }
+
 } 
