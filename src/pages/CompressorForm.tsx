@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import {
@@ -112,6 +112,101 @@ const defaultForm: FormDataShape = {
     { brand: "", otherBrandName: "",model: "", size: "", year: "", runningHours: "", loadingHours: "", photoLinks: [], remarks: "" },
   ],
 };
+
+function PhotoUploader({
+  multiple = false,
+  onFilesSelected,
+  disabled = false,
+  referenceSrc,
+  referenceAlt = "Reference",
+}: {
+  multiple?: boolean;
+  onFilesSelected: (files: FileList | null) => void;
+  disabled?: boolean;
+  referenceSrc: string;
+  referenceAlt?: string;
+}) {
+  const isMobile = useMemo(() => /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent), []);
+  const captureRef = useRef<HTMLInputElement>(null);
+  const galleryRef = useRef<HTMLInputElement>(null);
+
+  if (!isMobile) {
+    return (
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+        <div className="flex-1 w-full">
+          <Input 
+            type="file" 
+            accept="image/*" 
+            multiple={multiple}
+            onChange={(e) => onFilesSelected(e.target.files)}
+            disabled={disabled}
+          />
+        </div>
+        <div className="flex flex-col items-center w-full md:w-auto">
+          <span className="text-sm font-semibold mb-1 text-gray-700">Reference Photo</span>
+          <div className="w-full md:w-80 h-48 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+            <img 
+              src={referenceSrc} 
+              alt={referenceAlt} 
+              className="w-full md:w-72 h-auto md:h-44 object-contain md:object-cover rounded"
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Mobile version
+  return (
+    <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+      <div className="flex-1 w-full space-y-2">
+        <div className="flex gap-2">
+          <Button 
+            onClick={() => captureRef.current?.click()} 
+            disabled={disabled}
+          >
+            Capture Photo
+          </Button>
+          <Button 
+            onClick={() => galleryRef.current?.click()} 
+            disabled={disabled}
+          >
+            Choose {multiple ? "Photos" : "Photo"}
+          </Button>
+        </div>
+        <input 
+          type="file" 
+          accept="image/*" 
+          capture="environment"
+          multiple={false}
+          ref={captureRef} 
+          style={{ display: 'none' }} 
+          onChange={(e) => onFilesSelected(e.target.files)} 
+        />
+        <input 
+          type="file" 
+          accept="image/*" 
+          multiple={multiple}
+          ref={galleryRef} 
+          style={{ display: 'none' }} 
+          onChange={(e) => onFilesSelected(e.target.files)} 
+        />
+      </div>
+      <div className="flex flex-col items-center w-full md:w-auto">
+        <span className="text-sm font-semibold mb-1 text-gray-700">Reference Photo</span>
+        <div className="w-full md:w-80 h-48 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+          <img 
+            src={referenceSrc} 
+            alt={referenceAlt} 
+            className="w-full md:w-72 h-auto md:h-44 object-contain md:object-cover rounded"
+            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function CompressorForm() {
   const navigate = useNavigate();
@@ -434,29 +529,13 @@ const handleSubmit = async () => {
       </div>
     </div>
     <div className="space-y-2">
-      <Label htmlFor="companyPhoto">Company Photo</Label>
-      <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
-        <div className="flex-1 w-full">
-          <Input 
-            id="companyPhoto" 
-            type="file" 
-            accept="image/*" 
-            onChange={(e) => handleCompanyPhotoUpload(e.target.files?.[0] || null)} 
-            disabled={form.companyPhotoUploading}
-          />
-        </div>
-        <div className="flex flex-col items-center w-full md:w-auto">
-          <span className="text-sm font-semibold mb-1 text-gray-700">Reference Photo</span>
-          <div className="w-full md:w-80 h-48 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
-            <img 
-              src="companyimg.jpg" 
-              alt="Reference" 
-              className="w-full md:w-72 h-auto md:h-44 object-contain md:object-cover rounded"
-              onError={(e) => { e.currentTarget.style.display = 'none'; }}
-            />
-          </div>
-        </div>
-      </div>
+      <Label>Company Photo</Label>
+      <PhotoUploader
+        multiple={false}
+        onFilesSelected={(files) => handleCompanyPhotoUpload(files?.[0] || null)}
+        disabled={form.companyPhotoUploading}
+        referenceSrc="companyimg.jpg"
+      />
       {form.companyPhotoUploading && (
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm text-gray-600">
@@ -586,30 +665,14 @@ const handleSubmit = async () => {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor={`photo-${idx}`}>Compressor Photo</Label>
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
-            <div className="flex-1 w-full">
-              <Input 
-                id={`photo-${idx}`}
-                type="file" 
-                accept="image/*" 
-                multiple
-                onChange={(e) => handleMultipleUploads(idx, e.target.files)} 
-                disabled={comp.uploading}
-              />
-            </div>
-            <div className="flex flex-col items-center w-full md:w-auto">
-              <span className="text-sm font-semibold mb-1 text-gray-700">Reference Photo</span>
-              <div className="w-full md:w-80 h-48 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
-                <img 
-                  src="compressor.png" 
-                  alt="Reference" 
-                  className="w-full md:w-72 h-auto md:h-44 object-contain md:object-cover rounded"
-                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                />
-              </div>
-            </div>
-          </div>
+          <Label>Compressor Photo</Label>
+          <PhotoUploader
+            multiple={true}
+            onFilesSelected={(files) => handleMultipleUploads(idx, files)}
+            disabled={comp.uploading}
+            referenceSrc="compressor.png"
+            referenceAlt="Compressor Reference"
+          />
           {comp.uploading && (
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm text-gray-600">
