@@ -210,10 +210,40 @@ export default function CompressorForm() {
   };
 
   const handleSubmit = async () => {
-    toast.success("Form submitted successfully!");
-    setSuccessOpen(true);
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem(STORAGE_STEP_KEY);
+    try {
+      // Prepare data for Google Sheets
+      const submissionData = {
+        name: form.name,
+        date: form.date,
+        customer: form.customer,
+        companyPhotoLink: form.companyPhotoLink,
+        compressorCount: form.compressorCount,
+        compressors: form.compressors
+      };
+
+      // Submit through API proxy (like photo upload)
+      const response = await fetch("/api/submit", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(submissionData)
+      });
+
+      const result = await response.json();
+      
+      if (result.status === 'success') {
+        toast.success("Form submitted successfully!");
+        setSuccessOpen(true);
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(STORAGE_STEP_KEY);
+      } else {
+        throw new Error(result.message || 'Submission failed');
+      }
+    } catch (error) {
+      console.error('Submission error:', error);
+      toast.error("Form submission failed. Please try again.");
+    }
   };
 
   function updateCompressor(index: number, patch: Partial<CompressorDetail>) {
