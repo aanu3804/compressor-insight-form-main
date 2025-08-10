@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 
-const GAS_UPLOAD_URL = "https://script.google.com/macros/s/AKfycbyZtVKMMzoEunRdz2Z04mAJ5paXNXH2Ip6XHVAKsAX2gLlGdxzDFyYjwnfTKPJu5OG1zw/exec";
+const GAS_UPLOAD_URL = "https://script.google.com/macros/s/AKfycby4SjGbRc8DErH-FfziIVLELYkHO9sZ1AZLS5rTmgIwaZ2ofR415vTXGiqL9aQj68BiTQ/exec";
 const SUBMIT_URL = "YOUR_WEB_APP_URL"; // TODO: Replace with your Google Apps Script Web App URL for Google Sheets
 
 const NAMES = [
@@ -143,11 +143,12 @@ export default function CompressorForm() {
     
       try {
         const formData = new FormData();
-        formData.append("file", await file.arrayBuffer().then(buf => btoa(String.fromCharCode(...new Uint8Array(buf)))));
+        formData.append("file", file);
     
         const res = await fetch(GAS_UPLOAD_URL, {
           method: "POST",
           body: formData,
+          mode: "cors"
         });
     
         const data = await res.json();
@@ -186,6 +187,7 @@ export default function CompressorForm() {
         const res = await fetch(GAS_UPLOAD_URL, {
           method: "POST",
           body: formData,
+          mode: "cors"
         });
     
         const data = await res.json();
