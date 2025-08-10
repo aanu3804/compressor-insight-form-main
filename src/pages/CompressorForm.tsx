@@ -44,6 +44,7 @@ const SIZES = ["<30kw", "30 to 75kw", ">75kw"];
 type CompressorDetail = {
   brand: string;
   otherBrandName?: string;
+  model: string;
   size: string;
   year: string;
   runningHours: string;
@@ -86,7 +87,7 @@ const defaultForm: FormDataShape = {
   companyPhotoError: null,
   compressorCount: "1",
   compressors: [
-    { brand: "", otherBrandName: "", size: "", year: "", runningHours: "", loadingHours: "", photoLinks: [], remarks: "" },
+    { brand: "", otherBrandName: "",model: "", size: "", year: "", runningHours: "", loadingHours: "", photoLinks: [], remarks: "" },
   ],
 };
 
@@ -122,7 +123,7 @@ export default function CompressorForm() {
       const next = [...curr];
       if (curr.length < n) {
         for (let i = curr.length; i < n; i++) {
-          next.push({ brand: "", size: "", year: "", runningHours: "", loadingHours: "", photoLinks: [], remarks: "" });
+          next.push({ brand: "", model: "",size: "", year: "", runningHours: "", loadingHours: "", photoLinks: [], remarks: "" });
         }
       } else if (curr.length > n) {
         next.length = n;
@@ -157,6 +158,7 @@ export default function CompressorForm() {
         if (
           !comp.brand ||
           (comp.brand === "Other" && !comp.otherBrandName) ||
+          !comp.model ||
           !comp.size ||
           !comp.year ||
           !comp.runningHours ||
@@ -519,6 +521,17 @@ const handleSubmit = async () => {
                         />
                       </div>
                     )}
+
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor={`model-${idx}`}>Model</Label>
+                      <Input 
+                        id={`model-${idx}`}
+                        value={comp.model} 
+                        onChange={(e) => updateCompressor(idx, { model: e.target.value })} 
+                      />
+                    </div>
+
                     
                     <div className="space-y-2">
                       <Label htmlFor={`size-${idx}`}>Size</Label>
