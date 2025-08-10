@@ -154,7 +154,7 @@ export default function CompressorForm() {
       data: base64
     };
 
-    const res = await fetch(GAS_UPLOAD_URL, {
+    const res = await fetch("/api/upload", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
