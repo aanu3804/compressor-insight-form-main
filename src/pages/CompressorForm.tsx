@@ -39,7 +39,29 @@ const BRANDS = [
   { value: "Other", label: "Other" },
 ];
 
-const SIZES = ["<30kw", "30 to 75kw", ">75kw"];
+const SIZES = [
+  "3hp/2.2kW",
+  "4hp/3.0kW",
+  "5hp/3.7kW",
+  "7hp/5.2kW",
+  "10hp/7.5kW",
+  "15hp/11.0kW",
+  "20hp/15.0kW",
+  "25hp/18.5kW",
+  "30hp/22.0kW",
+  "40hp/30.0kW",
+  "50hp/37.0kW",
+  "60hp/45.0kW",
+  "75hp/55.0kW",
+  "100hp/75.0kW",
+  "120hp/90.0kW",
+  "150hp/110.0kW",
+  "180hp/132.0kW",
+  "220hp/160.0kW",
+  "270hp/200.0kW",
+  "340hp/250.0kW"
+];
+
 
 type CompressorDetail = {
   brand: string;
