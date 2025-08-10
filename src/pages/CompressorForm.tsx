@@ -101,6 +101,8 @@ export default function CompressorForm() {
     return saved ? JSON.parse(saved) : defaultForm;
   });
   const [successOpen, setSuccessOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
 
   const progress = useMemo(() => (step / MAX_STEPS) * 100, [step]);
 
@@ -249,36 +251,43 @@ export default function CompressorForm() {
     }
   };
 
-  const handleSubmit = async () => {
-    if (!validateStep()) return;
-    try {
-      const submissionData = {
-        name: form.name,
-        date: form.date,
-        customer: form.customer,
-        companyPhotoLinks: form.companyPhotoLinks,
-        compressorCount: form.compressorCount,
-        compressors: form.compressors
-      };
-      const response = await fetch("/api/submit", {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submissionData)
-      });
-      const result = await response.json();
-      if (result.status === 'success') {
-        toast.success("Form submitted successfully!");
-        setSuccessOpen(true);
-        localStorage.removeItem(STORAGE_KEY);
-        localStorage.removeItem(STORAGE_STEP_KEY);
-      } else {
-        throw new Error(result.message || 'Submission failed');
-      }
-    } catch (error) {
-      console.error('Submission error:', error);
-      toast.error("Form submission failed. Please try again.");
+const handleSubmit = async () => {
+  if (!validateStep()) return;
+
+  setSubmitting(true); // start loading
+  try {
+    const submissionData = {
+      name: form.name,
+      date: form.date,
+      customer: form.customer,
+      companyPhotoLinks: form.companyPhotoLinks,
+      compressorCount: form.compressorCount,
+      compressors: form.compressors
+    };
+
+    const response = await fetch("/api/submit", {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(submissionData)
+    });
+
+    const result = await response.json();
+    if (result.status === 'success') {
+      toast.success("Form submitted successfully!");
+      setSuccessOpen(true);
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(STORAGE_STEP_KEY);
+    } else {
+      throw new Error(result.message || 'Submission failed');
     }
-  };
+  } catch (error) {
+    console.error('Submission error:', error);
+    toast.error("Form submission failed. Please try again.");
+  } finally {
+    setSubmitting(false); // stop loading
+  }
+};
+
 
   function updateCompressor(index: number, patch: Partial<CompressorDetail>) {
     setForm((prev) => {
@@ -626,11 +635,20 @@ export default function CompressorForm() {
           </CardContent>
           <CardFooter className="justify-between">
             <Button variant="secondary" onClick={onBack} disabled={step === 1}>Back</Button>
-            {step < MAX_STEPS ? (
-              <Button onClick={onNext}>Next</Button>
-            ) : (
-              <Button onClick={handleSubmit}>Submit</Button>
-            )}
+              {step < MAX_STEPS ? (
+                <Button onClick={onNext}>Next</Button>
+              ) : (
+                <Button onClick={handleSubmit} disabled={submitting}>
+                  {submitting ? (
+                    <>
+                      <span className="loader mr-2"></span> Submitting...
+                    </>
+                  ) : (
+                    "Submit"
+                  )}
+                </Button>
+              )}
+
           </CardFooter>
         </Card>
       </div>
