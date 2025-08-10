@@ -48,6 +48,7 @@ type CompressorDetail = {
   year: string;
   runningHours: string;
   loadingHours: string;
+  remarks : string,
   photoLink?: string;
   uploading?: boolean;
   uploadError?: string | null;
@@ -85,7 +86,7 @@ const defaultForm: FormDataShape = {
   companyPhotoError: null,
   compressorCount: "1",
   compressors: [
-    { brand: "", otherBrandName: "", size: "", year: "", runningHours: "", loadingHours: "", photoLink: "" },
+    { brand: "", otherBrandName: "", size: "", year: "", runningHours: "", loadingHours: "", photoLink: "", remarks: "" },
   ],
 };
 
@@ -121,7 +122,7 @@ export default function CompressorForm() {
       const next = [...curr];
       if (curr.length < n) {
         for (let i = curr.length; i < n; i++) {
-          next.push({ brand: "", size: "", year: "", runningHours: "", loadingHours: "", photoLink: "" });
+          next.push({ brand: "", size: "", year: "", runningHours: "", loadingHours: "", photoLink: "", remarks: "" });
         }
       } else if (curr.length > n) {
         next.length = n;
@@ -224,32 +225,50 @@ export default function CompressorForm() {
   }
 
   return (
-    <div className="container mx-auto py-10">
-      <Helmet>
-        <title>Industrial Visit - Compressor Data Collection - Trinity</title>
-      </Helmet>
+    <div className="relative min-h-screen">
+      {/* Blurred Background Layer */}
+      <div 
+        className="absolute inset-0"
+        style={{
+          backgroundImage: 'url("step1.png")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          backgroundAttachment: 'fixed',
+          filter: 'blur(2px)'
+        }}
+      />
+      
+      {/* Content Layer */}
+      <div className="relative z-10 container mx-auto py-10">
+        <Helmet>
+          <title>Industrial Visit - Compressor Data Collection - Trinity</title>
+        </Helmet>
 
-      <div className="max-w-3xl mx-auto space-y-6">
-        <Progress value={progress} />
+                <div className="max-w-4xl mx-auto space-y-6">
+          <div className="text-center">
+            <div className="inline-block p-4 bg-white/95 border-4 border-white rounded-lg shadow-lg mb-4">
+              <h1 className="text-2xl font-bold text-black">
+                Industrial Visit - Compressor Data Collection - Trinity
+              </h1>
+            </div>
+            <Progress value={progress} />
+          </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Step {step} of {MAX_STEPS}</CardTitle>
-          </CardHeader>
+          <Card className="p-6">
+            <CardHeader className="pb-6">
+              <CardTitle className="text-xl">
+                {step === 2 && "Company details"}
+                {step === 4 && "Compressor(s) details"}
+                {step !== 2 && step !== 4 && `Step ${step} of ${MAX_STEPS}`}
+              </CardTitle>
+            </CardHeader>
           <CardContent className="space-y-6">
             {/* Step 1 */}
             {step === 1 && (
               <div className="space-y-8">
                 {/* Header Section */}
                 <div className="text-center space-y-4">
-                  <img 
-                    src="https://drive.google.com/uc?export=view&id=1piUgHthFHwE_JimYqYlV52EfIQ7ikdox" 
-                    alt="Industrial Visit" 
-                    className="mx-auto w-32 h-32 object-cover rounded-lg shadow-lg"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
                   <h1 className="text-3xl font-bold text-gray-900">
                     Industrial Visit - Compressor Data Collection - Trinity
                   </h1>
@@ -304,12 +323,43 @@ export default function CompressorForm() {
                   <Textarea id="address" value={form.customer.address} onChange={(e) => setForm({ ...form, customer: { ...form.customer, address: e.target.value } })} />
                 </div>
                 <div className="grid gap-2 sm:grid-cols-3">
-                  <Input id="pincode" placeholder="Pincode" value={form.customer.pincode} onChange={(e) => setForm({ ...form, customer: { ...form.customer, pincode: e.target.value } })} />
-                  <Input id="contactPerson" placeholder="Contact person" value={form.customer.contactPerson} onChange={(e) => setForm({ ...form, customer: { ...form.customer, contactPerson: e.target.value } })} />
-                  <Input id="contactNumber" placeholder="Contact number" value={form.customer.contactNumber} onChange={(e) => setForm({ ...form, customer: { ...form.customer, contactNumber: e.target.value } })} />
+                  <div className="space-y-2">
+                    <Label htmlFor="pincode">Pincode</Label>
+                    <Input id="pincode" value={form.customer.pincode} onChange={(e) => setForm({ ...form, customer: { ...form.customer, pincode: e.target.value } })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="contactPerson">Contact Person</Label>
+                    <Input id="contactPerson" value={form.customer.contactPerson} onChange={(e) => setForm({ ...form, customer: { ...form.customer, contactPerson: e.target.value } })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="contactNumber">Contact Number</Label>
+                    <Input id="contactNumber" value={form.customer.contactNumber} onChange={(e) => setForm({ ...form, customer: { ...form.customer, contactNumber: e.target.value } })} />
+                  </div>
                 </div>
-                <Input type="file" accept="image/*" onChange={(e) => handleCompanyPhotoUpload(e.target.files?.[0] || null)} />
-                {form.companyPhotoLink && <a href={form.companyPhotoLink} target="_blank" rel="noreferrer">View uploaded company photo</a>}
+                <div className="space-y-2">
+                  <Label htmlFor="companyPhoto">Company Photo</Label>
+                  <div className="flex items-center gap-4">
+                    <div className="flex-1">
+                      <Input 
+                        id="companyPhoto" 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={(e) => handleCompanyPhotoUpload(e.target.files?.[0] || null)} 
+                      />
+                    </div>
+                    <div className="w-80 h-48 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+                      <img 
+                        src="companyimg.jpg" 
+                        alt="Reference" 
+                        className="w-76 h-44 object-cover rounded"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  </div>
+                  {form.companyPhotoLink && <a href={form.companyPhotoLink} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">View uploaded company photo</a>}
+                </div>
               </div>
             )}
 
@@ -337,26 +387,98 @@ export default function CompressorForm() {
                 {form.compressors.map((comp, idx) => (
                   <div key={idx} className="rounded-md border p-4 space-y-4">
                     <h3 className="text-lg font-semibold">Compressor {idx + 1}</h3>
-                    <Select value={comp.brand} onValueChange={(v) => updateCompressor(idx, { brand: v, ...(v !== "Other" ? { otherBrandName: "" } : {}) })}>
-                      <SelectTrigger><SelectValue placeholder="Select brand" /></SelectTrigger>
-                      <SelectContent>
-                        {BRANDS.map((b) => <SelectItem key={b.value} value={b.value}>{b.label}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor={`brand-${idx}`}>Brand</Label>
+                      <Select value={comp.brand} onValueChange={(v) => updateCompressor(idx, { brand: v, ...(v !== "Other" ? { otherBrandName: "" } : {}) })}>
+                        <SelectTrigger id={`brand-${idx}`}><SelectValue placeholder="Select brand" /></SelectTrigger>
+                        <SelectContent>
+                          {BRANDS.map((b) => <SelectItem key={b.value} value={b.value}>{b.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
                     {comp.brand === "Other" && (
-                      <Input placeholder="Enter brand name" value={comp.otherBrandName || ""} onChange={(e) => updateCompressor(idx, { otherBrandName: e.target.value })} />
+                      <div className="space-y-2">
+                        <Label htmlFor={`otherBrand-${idx}`}>Other Brand Name</Label>
+                        <Input 
+                          id={`otherBrand-${idx}`}
+                          value={comp.otherBrandName || ""} 
+                          onChange={(e) => updateCompressor(idx, { otherBrandName: e.target.value })} 
+                        />
+                      </div>
                     )}
-                    <Select value={comp.size} onValueChange={(v) => updateCompressor(idx, { size: v })}>
-                      <SelectTrigger><SelectValue placeholder="Select size" /></SelectTrigger>
-                      <SelectContent>
-                        {SIZES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                    <Input placeholder="Year" value={comp.year} onChange={(e) => updateCompressor(idx, { year: e.target.value })} />
-                    <Input placeholder="Running hours" value={comp.runningHours} onChange={(e) => updateCompressor(idx, { runningHours: e.target.value })} />
-                    <Input placeholder="Loading hours" value={comp.loadingHours} onChange={(e) => updateCompressor(idx, { loadingHours: e.target.value })} />
-                    <Input type="file" accept="image/*" onChange={(e) => handleUpload(idx, e.target.files?.[0] || null)} />
-                    {comp.photoLink && <a href={comp.photoLink} target="_blank" rel="noreferrer">View uploaded photo</a>}
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor={`size-${idx}`}>Size</Label>
+                      <Select value={comp.size} onValueChange={(v) => updateCompressor(idx, { size: v })}>
+                        <SelectTrigger id={`size-${idx}`}><SelectValue placeholder="Select size" /></SelectTrigger>
+                        <SelectContent>
+                          {SIZES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor={`year-${idx}`}>Year</Label>
+                      <Input 
+                        id={`year-${idx}`}
+                        value={comp.year} 
+                        onChange={(e) => updateCompressor(idx, { year: e.target.value })} 
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor={`runningHours-${idx}`}>Running Hours</Label>
+                      <Input 
+                        id={`runningHours-${idx}`}
+                        value={comp.runningHours} 
+                        onChange={(e) => updateCompressor(idx, { runningHours: e.target.value })} 
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor={`loadingHours-${idx}`}>Loading Hours</Label>
+                      <Input 
+                        id={`loadingHours-${idx}`}
+                        value={comp.loadingHours} 
+                        onChange={(e) => updateCompressor(idx, { loadingHours: e.target.value })} 
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor={`remarks-${idx}`}>Remarks</Label>
+                      <Input 
+                        id={`remarks-${idx}`}
+                        value={comp.remarks} 
+                        onChange={(e) => updateCompressor(idx, { remarks: e.target.value })} 
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor={`photo-${idx}`}>Compressor Photo</Label>
+                      <div className="flex items-center gap-4">
+                        <div className="flex-1">
+                          <Input 
+                            id={`photo-${idx}`}
+                            type="file" 
+                            accept="image/*" 
+                            onChange={(e) => handleUpload(idx, e.target.files?.[0] || null)} 
+                          />
+                        </div>
+                        <div className="w-80 h-48 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+                          <img 
+                            src="compressor.png" 
+                            alt="Reference" 
+                            className="w-76 h-44 object-cover rounded"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        </div>
+                      </div>
+                      {comp.photoLink && <a href={comp.photoLink} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">View uploaded photo</a>}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -382,8 +504,9 @@ export default function CompressorForm() {
           <AlertDialogFooter>
             <AlertDialogAction onClick={() => { setSuccessOpen(false); navigate("/"); }}>Close</AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
-  );
-}
+                 </AlertDialogContent>
+       </AlertDialog>
+       </div>
+     </div>
+   );
+ }
