@@ -124,6 +124,13 @@ export default function CompressorForm() {
   });
   const [successOpen, setSuccessOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const progress = useMemo(() => (step / MAX_STEPS) * 100, [step]);
 
@@ -321,6 +328,13 @@ export default function CompressorForm() {
   const FilePicker = ({ id, onChange, disabled, multiple, label }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    const handleCameraClick = () => {
+      if (fileInputRef.current) {
+        fileInputRef.current.setAttribute("capture", "environment"); // Camera
+        fileInputRef.current.click();
+      }
+    };
+
     const handleChooseFileClick = () => {
       if (fileInputRef.current) {
         fileInputRef.current.removeAttribute("capture"); // Default to file picker
@@ -333,6 +347,11 @@ export default function CompressorForm() {
         <Label htmlFor={id}>{label}</Label>
         <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
           <div className="flex-1 w-full space-y-2">
+            {isMobile && (
+              <Button onClick={handleCameraClick} disabled={disabled} className="w-full md:w-auto">
+                Take Photo
+              </Button>
+            )}
             <Button onClick={handleChooseFileClick} disabled={disabled} className="w-full md:w-auto">
               Choose File
             </Button>
