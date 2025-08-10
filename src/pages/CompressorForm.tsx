@@ -81,13 +81,14 @@ const defaultForm: FormDataShape = {
     contactPerson: "",
     contactNumber: "",
   },
-  companyPhotoLink: "",
+  companyPhotoLinks: [],
   companyPhotoUploading: false,
   companyPhotoError: null,
   compressorCount: "1",
   compressors: [
-    { brand: "", otherBrandName: "", size: "", year: "", runningHours: "", loadingHours: "", photoLink: "", remarks: "" },
+    { brand: "", otherBrandName: "", size: "", year: "", runningHours: "", loadingHours: "", photoLinks: [], remarks: "" },
   ],
+
 };
 
 export default function CompressorForm() {
@@ -122,7 +123,7 @@ export default function CompressorForm() {
       const next = [...curr];
       if (curr.length < n) {
         for (let i = curr.length; i < n; i++) {
-          next.push({ brand: "", size: "", year: "", runningHours: "", loadingHours: "", photoLink: "", remarks: "" });
+          next.push({ brand: "", size: "", year: "", runningHours: "", loadingHours: "", photoLinks: [], remarks: "" });
         }
       } else if (curr.length > n) {
         next.length = n;
@@ -200,7 +201,12 @@ export default function CompressorForm() {
 
     try {
       const link = await uploadBase64(file);
-      setForm((prev) => ({ ...prev, companyPhotoLink: link, companyPhotoUploading: false }));
+      setForm((prev) => ({
+        ...prev,
+        companyPhotoLinks: [...(prev.companyPhotoLinks || []), link],
+        companyPhotoUploading: false
+      }));
+
       toast.success("Company photo uploaded");
     } catch (err: any) {
       setForm((prev) => ({ ...prev, companyPhotoUploading: false, companyPhotoError: err?.message || "Upload error" }));
@@ -216,7 +222,7 @@ export default function CompressorForm() {
         name: form.name,
         date: form.date,
         customer: form.customer,
-        companyPhotoLink: form.companyPhotoLink,
+        companyPhotoLinks: form.companyPhotoLinks,
         compressorCount: form.compressorCount,
         compressors: form.compressors
       };
@@ -401,20 +407,28 @@ export default function CompressorForm() {
                   {form.companyPhotoError && (
                     <p className="text-red-600 text-sm">{form.companyPhotoError}</p>
                   )}
-                  {form.companyPhotoLink && (
-                    <div className="flex items-center gap-4">
-                      <a href={form.companyPhotoLink} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
-                        View uploaded company photo
+              {form.companyPhotoLinks?.length > 0 && (
+                <div className="space-y-2">
+                  {form.companyPhotoLinks.map((link, i) => (
+                    <div key={i} className="flex items-center gap-4">
+                      <a href={link} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
+                        View uploaded company photo {i + 1}
                       </a>
                       <button
                         type="button"
-                        onClick={() => setForm(prev => ({ ...prev, companyPhotoLink: "" }))}
+                        onClick={() => setForm(prev => ({
+                          ...prev,
+                          companyPhotoLinks: prev.companyPhotoLinks.filter((_, idx) => idx !== i)
+                        }))}
                         className="text-red-600 hover:text-red-800 hover:underline text-sm"
                       >
                         Remove photo
                       </button>
                     </div>
-                  )}
+                  ))}
+                </div>
+              )}
+
                 </div>
               </div>
             )}
@@ -546,20 +560,27 @@ export default function CompressorForm() {
                       {comp.uploadError && (
                         <p className="text-red-600 text-sm">{comp.uploadError}</p>
                       )}
-                      {comp.photoLink && (
-                        <div className="flex items-center gap-4">
-                          <a href={comp.photoLink} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
-                            View uploaded photo
-                          </a>
-                          <button
-                            type="button"
-                            onClick={() => updateCompressor(idx, { photoLink: "" })}
-                            className="text-red-600 hover:text-red-800 hover:underline text-sm"
-                          >
-                            Remove photo
-                          </button>
-                        </div>
-                      )}
+                    {comp.photoLinks?.length > 0 && (
+                      <div className="space-y-2">
+                        {comp.photoLinks.map((link, i) => (
+                          <div key={i} className="flex items-center gap-4">
+                            <a href={link} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
+                              View uploaded photo {i + 1}
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => updateCompressor(idx, {
+                                photoLinks: comp.photoLinks.filter((_, idx2) => idx2 !== i)
+                              })}
+                              className="text-red-600 hover:text-red-800 hover:underline text-sm"
+                            >
+                              Remove photo
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
                     </div>
                   </div>
                 ))}
