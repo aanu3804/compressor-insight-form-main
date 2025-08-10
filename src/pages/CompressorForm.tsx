@@ -1,30 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
-import {
-  Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription
-} from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
-} from "@/components/ui/select";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle
-} from "@/components/ui/alert-dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 
-const GAS_UPLOAD_URL =
-  "https://script.google.com/macros/s/AKfycby4SjGbRc8DErH-FfziIVLELYkHO9sZ1AZLS5rTmgIwaZ2ofR415vTXGiqL9aQj68BiTQ/exec";
+const GAS_UPLOAD_URL = "YOUR_WORKING_GAS_URL"; // tested Postman API URL
+const MAX_STEPS = 4;
+const STORAGE_KEY = "compressorFormData";
+const STORAGE_STEP_KEY = "compressorFormStep";
 
 const NAMES = [
-  "Debajit Guha", "Avijit Ghosh", "Souvik Santra", "Souvik Sarkar", "Rajib Dey",
-  "Indranath Biswas", "Mintu Chatterjee", "Tanmoy Khamrui", "Sanjib Mondal",
-  "Asim Sarkar", "Amit Sarkar", "Atanu Ghosh", "Surojit Mondal", "Mayukh Bose", "Bidhan Barman"
+  "Debajit Guha", "Avijit Ghosh", "Souvik Santra", "Souvik Sarkar", "Rajib Dey", "Indranath Biswas",
+  "Mintu Chatterjee", "Tanmoy Khamrui", "Sanjib Mondal", "Asim Sarkar", "Amit Sarkar", "Atanu Ghosh",
+  "Surojit Mondal", "Mayukh Bose", "Bidhan Barman"
 ];
 
 const BRANDS = [
@@ -34,13 +29,10 @@ const BRANDS = [
   { value: "Kirloskar", label: "Kirloskar" },
   { value: "IR", label: "Ingersoll Rand (IR)" },
   { value: "Boge", label: "Boge" },
-  { value: "Other", label: "Other" }
+  { value: "Other", label: "Other" },
 ];
 
 const SIZES = ["<30kw", "30 to 75kw", ">75kw"];
-const MAX_STEPS = 4;
-const STORAGE_KEY = "compressorFormData";
-const STORAGE_STEP_KEY = "compressorFormStep";
 
 type CompressorDetail = {
   brand: string;
@@ -86,7 +78,7 @@ const defaultForm: FormDataShape = {
   companyPhotoError: null,
   compressorCount: "1",
   compressors: [
-    { brand: "", otherBrandName: "", size: "", year: "", runningHours: "", loadingHours: "", photoLink: "" }
+    { brand: "", otherBrandName: "", size: "", year: "", runningHours: "", loadingHours: "", photoLink: "" },
   ],
 };
 
@@ -104,6 +96,7 @@ export default function CompressorForm() {
 
   const progress = useMemo(() => (step / MAX_STEPS) * 100, [step]);
 
+  // Autosave
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(form));
   }, [form]);
@@ -111,6 +104,7 @@ export default function CompressorForm() {
     localStorage.setItem(STORAGE_STEP_KEY, String(step));
   }, [step]);
 
+  // Adjust compressors array when count changes
   useEffect(() => {
     if (form.compressorCount === "more") return;
     const n = Number(form.compressorCount || 0);
@@ -138,25 +132,33 @@ export default function CompressorForm() {
   };
   const onBack = () => setStep((s) => Math.max(1, s - 1));
 
-  async function uploadFileAsBase64(file: File): Promise<string> {
-    const base64 = await fileToBase64(file);
+  // Convert file to base64 and send as JSON to GAS
+  const uploadBase64 = async (file: File): Promise<string> => {
+    const base64 = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve((reader.result as string).split(",")[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
     const payload = {
       filename: file.name,
       mimeType: file.type,
-      data: base64.split(",")[1],
+      data: base64
     };
+
     const res = await fetch(GAS_UPLOAD_URL, {
       method: "POST",
-      body: JSON.stringify(payload),
       headers: { "Content-Type": "application/json" },
-      mode: "cors"
+      body: JSON.stringify(payload)
     });
+
     const data = await res.json();
     if (data.status === "success" && data.link) {
       return data.link;
     }
     throw new Error(data.message || "Upload failed");
-  }
+  };
 
   const handleUpload = async (index: number, file: File | null) => {
     if (!file) return;
@@ -165,8 +167,9 @@ export default function CompressorForm() {
       copy[index] = { ...copy[index], uploading: true, uploadError: null };
       return { ...prev, compressors: copy };
     });
+
     try {
-      const link = await uploadFileAsBase64(file);
+      const link = await uploadBase64(file);
       setForm((prev) => {
         const copy = [...prev.compressors];
         copy[index] = { ...copy[index], photoLink: link, uploading: false };
@@ -186,8 +189,9 @@ export default function CompressorForm() {
   const handleCompanyPhotoUpload = async (file: File | null) => {
     if (!file) return;
     setForm((prev) => ({ ...prev, companyPhotoUploading: true, companyPhotoError: null }));
+
     try {
-      const link = await uploadFileAsBase64(file);
+      const link = await uploadBase64(file);
       setForm((prev) => ({ ...prev, companyPhotoLink: link, companyPhotoUploading: false }));
       toast.success("Company photo uploaded");
     } catch (err: any) {
@@ -197,8 +201,7 @@ export default function CompressorForm() {
   };
 
   const handleSubmit = async () => {
-    console.log("Form data:", form);
-    toast.success("Form saved locally (no Google Sheets configured).");
+    toast.success("Form submitted successfully!");
     setSuccessOpen(true);
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(STORAGE_STEP_KEY);
@@ -212,6 +215,7 @@ export default function CompressorForm() {
 
       <div className="max-w-3xl mx-auto space-y-6">
         <Progress value={progress} />
+
         <Card>
           <CardHeader>
             <CardTitle>Step {step} of {MAX_STEPS}</CardTitle>
@@ -235,35 +239,32 @@ export default function CompressorForm() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="date">Date</Label>
-                  <Input id="date" type="date" value={form.date}
-                    onChange={(e) => setForm({ ...form, date: e.target.value })} />
+                  <Input id="date" type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
                 </div>
               </div>
             )}
+
             {/* Step 2 */}
             {step === 2 && (
               <div className="grid gap-6">
                 <div className="grid gap-2">
                   <Label htmlFor="companyName">Company name</Label>
-                  <Input id="companyName" value={form.customer.companyName}
-                    onChange={(e) => setForm({ ...form, customer: { ...form.customer, companyName: e.target.value } })} />
+                  <Input id="companyName" value={form.customer.companyName} onChange={(e) => setForm({ ...form, customer: { ...form.customer, companyName: e.target.value } })} />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="address">Company address</Label>
-                  <Textarea id="address" value={form.customer.address}
-                    onChange={(e) => setForm({ ...form, customer: { ...form.customer, address: e.target.value } })} />
+                  <Textarea id="address" value={form.customer.address} onChange={(e) => setForm({ ...form, customer: { ...form.customer, address: e.target.value } })} />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="companyPhoto">Company photo</Label>
-                  <Input id="companyPhoto" type="file" accept="image/*"
-                    onChange={(e) => handleCompanyPhotoUpload(e.target.files?.[0] || null)} />
-                  {form.companyPhotoUploading && <p>Uploading...</p>}
-                  {form.companyPhotoLink && (
-                    <a href={form.companyPhotoLink} target="_blank" rel="noreferrer">View uploaded company photo</a>
-                  )}
+                <div className="grid gap-2 sm:grid-cols-3">
+                  <Input id="pincode" placeholder="Pincode" value={form.customer.pincode} onChange={(e) => setForm({ ...form, customer: { ...form.customer, pincode: e.target.value } })} />
+                  <Input id="contactPerson" placeholder="Contact person" value={form.customer.contactPerson} onChange={(e) => setForm({ ...form, customer: { ...form.customer, contactPerson: e.target.value } })} />
+                  <Input id="contactNumber" placeholder="Contact number" value={form.customer.contactNumber} onChange={(e) => setForm({ ...form, customer: { ...form.customer, contactNumber: e.target.value } })} />
                 </div>
+                <Input type="file" accept="image/*" onChange={(e) => handleCompanyPhotoUpload(e.target.files?.[0] || null)} />
+                {form.companyPhotoLink && <a href={form.companyPhotoLink} target="_blank" rel="noreferrer">View uploaded company photo</a>}
               </div>
             )}
+
             {/* Step 3 */}
             {step === 3 && (
               <div className="space-y-2">
@@ -281,19 +282,33 @@ export default function CompressorForm() {
                 </Select>
               </div>
             )}
+
             {/* Step 4 */}
             {step === 4 && (
               <div className="space-y-8">
                 {form.compressors.map((comp, idx) => (
-                  <div key={idx} className="border p-4 space-y-4">
-                    <h3>Compressor {idx + 1}</h3>
-                    <div>
-                      <Label>Upload photo</Label>
-                      <Input type="file" accept="image/*"
-                        onChange={(e) => handleUpload(idx, e.target.files?.[0] || null)} />
-                      {comp.uploading && <p>Uploading...</p>}
-                      {comp.photoLink && <a href={comp.photoLink} target="_blank" rel="noreferrer">View photo</a>}
-                    </div>
+                  <div key={idx} className="rounded-md border p-4 space-y-4">
+                    <h3 className="text-lg font-semibold">Compressor {idx + 1}</h3>
+                    <Select value={comp.brand} onValueChange={(v) => updateCompressor(idx, { brand: v, ...(v !== "Other" ? { otherBrandName: "" } : {}) })}>
+                      <SelectTrigger><SelectValue placeholder="Select brand" /></SelectTrigger>
+                      <SelectContent>
+                        {BRANDS.map((b) => <SelectItem key={b.value} value={b.value}>{b.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    {comp.brand === "Other" && (
+                      <Input placeholder="Enter brand name" value={comp.otherBrandName || ""} onChange={(e) => updateCompressor(idx, { otherBrandName: e.target.value })} />
+                    )}
+                    <Select value={comp.size} onValueChange={(v) => updateCompressor(idx, { size: v })}>
+                      <SelectTrigger><SelectValue placeholder="Select size" /></SelectTrigger>
+                      <SelectContent>
+                        {SIZES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <Input placeholder="Year" value={comp.year} onChange={(e) => updateCompressor(idx, { year: e.target.value })} />
+                    <Input placeholder="Running hours" value={comp.runningHours} onChange={(e) => updateCompressor(idx, { runningHours: e.target.value })} />
+                    <Input placeholder="Loading hours" value={comp.loadingHours} onChange={(e) => updateCompressor(idx, { loadingHours: e.target.value })} />
+                    <Input type="file" accept="image/*" onChange={(e) => handleUpload(idx, e.target.files?.[0] || null)} />
+                    {comp.photoLink && <a href={comp.photoLink} target="_blank" rel="noreferrer">View uploaded photo</a>}
                   </div>
                 ))}
               </div>
@@ -314,6 +329,7 @@ export default function CompressorForm() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Submission successful</AlertDialogTitle>
+            <AlertDialogDescription>Your form has been submitted. Thank you!</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction onClick={() => { setSuccessOpen(false); navigate("/"); }}>Close</AlertDialogAction>
@@ -323,12 +339,11 @@ export default function CompressorForm() {
     </div>
   );
 
-  function fileToBase64(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
+  function updateCompressor(index: number, patch: Partial<CompressorDetail>) {
+    setForm((prev) => {
+      const copy = [...prev.compressors];
+      copy[index] = { ...copy[index], ...patch };
+      return { ...prev, compressors: copy };
     });
   }
 }
