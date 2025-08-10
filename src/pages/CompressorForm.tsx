@@ -239,23 +239,55 @@ export default function CompressorForm() {
           <CardContent className="space-y-6">
             {/* Step 1 */}
             {step === 1 && (
-              <div className="grid gap-6 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Select Name</Label>
-                  <Select value={form.name} onValueChange={(v) => setForm({ ...form, name: v })}>
-                    <SelectTrigger id="name">
-                      <SelectValue placeholder="Choose name" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {NAMES.map((n) => (
-                        <SelectItem key={n} value={n}>{n}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              <div className="space-y-8">
+                {/* Header Section */}
+                <div className="text-center space-y-4">
+                  <img 
+                    src="https://drive.google.com/uc?export=view&id=1piUgHthFHwE_JimYqYlV52EfIQ7ikdox" 
+                    alt="Industrial Visit" 
+                    className="mx-auto w-32 h-32 object-cover rounded-lg shadow-lg"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                  <h1 className="text-3xl font-bold text-gray-900">
+                    Industrial Visit - Compressor Data Collection - Trinity
+                  </h1>
+                  <div className="max-w-2xl mx-auto text-gray-600 space-y-3">
+                    <p>
+                      This form is designed to collect valuable information about compressors in every industry we visit.
+                      Your input helps us build a powerful database for competition opportunities, sales tracking, and better customer support.
+                    </p>
+                    <p className="flex items-center gap-2 text-blue-600 font-medium">
+                      🧭
+                      Every visit counts – your reports directly contribute to our company's growth and help us serve clients better.
+                    </p>
+                    <p className="flex items-center gap-2 text-green-600 font-medium">
+                      <span>✅</span>
+                      Fill this after each industry visit — it only takes 2 minutes!
+                    </p>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="date">Date</Label>
-                  <Input id="date" type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
+
+                {/* Form Fields */}
+                <div className="grid gap-6 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Select Name</Label>
+                    <Select value={form.name} onValueChange={(v) => setForm({ ...form, name: v })}>
+                      <SelectTrigger id="name">
+                        <SelectValue placeholder="Choose name" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {NAMES.map((n) => (
+                          <SelectItem key={n} value={n}>{n}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="date">Date</Label>
+                    <Input id="date" type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
+                  </div>
                 </div>
               </div>
             )}
