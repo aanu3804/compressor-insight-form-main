@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 
+const GAS_UPLOAD_URL = "https://script.google.com/macros/s/AKfycbwR0CU9AATBHzUgxmCj1nOHxIVg1aep1HyvULT0_q6cRT_QIE0oPfeyA-YHb5ahaXudNA/exec"; // tested Postman API URL
 const MAX_STEPS = 4;
 const STORAGE_KEY = "compressorFormData";
 const STORAGE_STEP_KEY = "compressorFormStep";
@@ -138,48 +139,33 @@ export default function CompressorForm() {
   };
   const onBack = () => setStep((s) => Math.max(1, s - 1));
 
-  // helper: convert File → data URL
-  function fileToDataUrl(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
+  // Convert file to base64 and send as JSON to GAS
+  const uploadBase64 = async (file: File): Promise<string> => {
+    const base64 = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = () => reject(new Error("File read error"));
+      reader.onload = () => resolve((reader.result as string).split(",")[1]);
+      reader.onerror = reject;
       reader.readAsDataURL(file);
     });
-  }
-
-  // Upload via /api/upload proxy
-  async function uploadBase64(file: File): Promise<string> {
-    const dataUrl = await fileToDataUrl(file);
-    const base64 = dataUrl.split(",")[1] || dataUrl;
 
     const payload = {
       filename: file.name,
-      mimeType: file.type || "application/octet-stream",
-      data: base64,
+      mimeType: file.type,
+      data: base64
     };
 
-    const res = await fetch("/api/upload", {
+    const res = await fetch(GAS_UPLOAD_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(payload)
     });
 
-    const text = await res.text();
-
-    if (!res.ok) {
-      try {
-        const json = JSON.parse(text);
-        throw new Error(json.message || JSON.stringify(json));
-      } catch {
-        throw new Error("Upload proxy error: " + text);
-      }
+    const data = await res.json();
+    if (data.status === "success" && data.link) {
+      return data.link;
     }
-
-    const json = JSON.parse(text);
-    if (json.status === "success" && json.link) return json.link;
-    throw new Error(json.message || "Upload failed");
-  }
+    throw new Error(data.message || "Upload failed");
+  };
 
   const handleUpload = async (index: number, file: File | null) => {
     if (!file) return;
@@ -218,6 +204,7 @@ export default function CompressorForm() {
     } catch (err: any) {
       setForm((prev) => ({ ...prev, companyPhotoUploading: false, companyPhotoError: err?.message || "Upload error" }));
       toast.error("Company photo upload failed. Please try again.");
+      console.log(err.message);
     }
   };
 
@@ -250,6 +237,7 @@ export default function CompressorForm() {
             <CardTitle>Step {step} of {MAX_STEPS}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
+            {/* Step 1 */}
             {step === 1 && (
               <div className="grid gap-6 sm:grid-cols-2">
                 <div className="space-y-2">
@@ -272,6 +260,7 @@ export default function CompressorForm() {
               </div>
             )}
 
+            {/* Step 2 */}
             {step === 2 && (
               <div className="grid gap-6">
                 <div className="grid gap-2">
@@ -292,6 +281,7 @@ export default function CompressorForm() {
               </div>
             )}
 
+            {/* Step 3 */}
             {step === 3 && (
               <div className="space-y-2">
                 <Label htmlFor="compressorCount">Number of compressors</Label>
@@ -309,6 +299,7 @@ export default function CompressorForm() {
               </div>
             )}
 
+            {/* Step 4 */}
             {step === 4 && (
               <div className="space-y-8">
                 {form.compressors.map((comp, idx) => (
