@@ -218,7 +218,7 @@ export default function CompressorForm() {
       reader.readAsDataURL(file);
     });
     const payload = { filename: file.name, mimeType: file.type, data: base64 };
-    const res = await fetch("/api/upload", {
+    const res = await fetch(GAS_UPLOAD_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
@@ -294,7 +294,7 @@ export default function CompressorForm() {
         compressors: form.compressors
       };
 
-      const response = await fetch("/api/submit", {
+      const response = await fetch(GAS_UPLOAD_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(submissionData)
@@ -335,9 +335,9 @@ export default function CompressorForm() {
       }
     };
 
-    const handleChooseFileClick = () => {
+    const handleGalleryClick = () => {
       if (fileInputRef.current) {
-        fileInputRef.current.removeAttribute("capture"); // Default to file picker
+        fileInputRef.current.removeAttribute("capture"); // Gallery or file picker
         fileInputRef.current.click();
       }
     };
@@ -347,13 +347,11 @@ export default function CompressorForm() {
         <Label htmlFor={id}>{label}</Label>
         <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
           <div className="flex-1 w-full space-y-2">
-            {isMobile && (
-              <Button onClick={handleCameraClick} disabled={disabled} className="w-full md:w-auto">
-                Take Photo
-              </Button>
-            )}
-            <Button onClick={handleChooseFileClick} disabled={disabled} className="w-full md:w-auto">
-              Choose File
+            <Button onClick={handleCameraClick} disabled={disabled} className="w-full md:w-auto">
+              Take Photo
+            </Button>
+            <Button onClick={handleGalleryClick} disabled={disabled} className="w-full md:w-auto">
+              Choose from Gallery
             </Button>
             <input
               ref={fileInputRef}
