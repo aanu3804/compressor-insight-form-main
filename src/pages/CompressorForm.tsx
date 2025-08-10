@@ -113,7 +113,81 @@ const defaultForm: FormDataShape = {
   ],
 };
 
-// Modified PhotoUploader to log file details
+// Image compression function
+const compressImage = (file: File, maxSizeBytes: number): Promise<File> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        reject(new Error("Canvas context not supported"));
+        return;
+      }
+
+      // Set target dimensions (maintain aspect ratio)
+      const maxDimension = 1024; // Adjust as needed
+      let width = img.width;
+      let height = img.height;
+      if (width > height) {
+        if (width > maxDimension) {
+          height = Math.round((height * maxDimension) / width);
+          width = maxDimension;
+        }
+      } else {
+        if (height > maxDimension) {
+          width = Math.round((width * maxDimension) / height);
+          height = maxDimension;
+        }
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // Convert to JPEG with quality reduction until under maxSizeBytes
+      let quality = 0.9;
+      let compressedDataUrl: string;
+      const attemptCompression = () => {
+        compressedDataUrl = canvas.toDataURL("image/jpeg", quality);
+        const base64Data = compressedDataUrl.split(",")[1];
+        const byteLength = Math.round((base64Data.length * 3) / 4); // Approximate size in bytes
+        if (byteLength <= maxSizeBytes || quality <= 0.1) {
+          return compressedDataUrl;
+        }
+        quality -= 0.1;
+        return attemptCompression();
+      };
+
+      try {
+        const finalDataUrl = attemptCompression();
+        const byteString = atob(finalDataUrl.split(",")[1]);
+        const arrayBuffer = new ArrayBuffer(byteString.length);
+        const uint8Array = new Uint8Array(arrayBuffer);
+        for (let i = 0; i < byteString.length; i++) {
+          uint8Array[i] = byteString.charCodeAt(i);
+        }
+        const blob = new Blob([arrayBuffer], { type: "image/jpeg" });
+        const compressedFile = new File([blob], file.name || `compressed-${Date.now()}.jpg`, { type: "image/jpeg" });
+        console.log(`Compressed file size: ${compressedFile.size} bytes`);
+        resolve(compressedFile);
+      } catch (err) {
+        reject(err);
+      }
+    };
+    img.onerror = reject;
+  });
+};
+
+// PhotoUploader (same as previous, with logging for debugging)
 function PhotoUploader({
   multiple = false,
   onFilesSelected,
@@ -310,19 +384,29 @@ export default function CompressorForm() {
   const onBack = () => setStep((s) => Math.max(1, s - 1));
 
 // Modified uploadBase64 to normalize filename and improve error handling
+// Modified uploadBase64 with image compression
 const uploadBase64 = async (file: File): Promise<string> => {
   try {
+    // Compress image if it's too large
+    const maxSizeBytes = 4 * 1024 * 1024; // 4MB target to stay under 6MB after base64
+    let processedFile = file;
+
+    if (file.size > maxSizeBytes) {
+      console.log(`Compressing file: ${file.name}, original size: ${file.size} bytes`);
+      processedFile = await compressImage(file, maxSizeBytes);
+    }
+
     const base64 = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve((reader.result as string).split(",")[1]);
       reader.onerror = reject;
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(processedFile);
     });
 
     // Normalize filename for camera photos
     const filename = file.name && file.name !== "image.jpg" ? file.name : `camera-photo-${Date.now()}.jpg`;
-    const payload = { filename, mimeType: file.type || "image/jpeg", data: base64 };
-    console.log("Uploading file:", { filename, mimeType: file.type, size: file.size });
+    const payload = { filename, mimeType: processedFile.type || "image/jpeg", data: base64 };
+    console.log("Uploading file:", { filename, mimeType: processedFile.type, size: processedFile.size });
 
     const res = await fetch("/api/upload", {
       method: "POST",
@@ -335,6 +419,9 @@ const uploadBase64 = async (file: File): Promise<string> => {
     if (!res.ok) {
       const text = await res.text();
       console.error("Server error response:", text);
+      if (res.status === 413) {
+        throw new Error("File is too large. Please use a smaller image or try again.");
+      }
       throw new Error(`Server returned ${res.status}: ${text}`);
     }
 
