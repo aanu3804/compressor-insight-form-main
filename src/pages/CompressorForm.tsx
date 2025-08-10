@@ -433,68 +433,67 @@ const handleSubmit = async () => {
                     <Input id="contactNumber" value={form.customer.contactNumber} onChange={(e) => setForm({ ...form, customer: { ...form.customer, contactNumber: e.target.value } })} />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="companyPhoto">Company Photo</Label>
-                  <div className="flex items-center gap-4">
-                    <div className="flex-1">
-                      <Input 
-                        id="companyPhoto" 
-                        type="file" 
-                        accept="image/*" 
-                        onChange={(e) => handleCompanyPhotoUpload(e.target.files?.[0] || null)} 
-                        disabled={form.companyPhotoUploading}
+              <div className="space-y-2">
+                <Label htmlFor="companyPhoto">Company Photo</Label>
+                <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+                  <div className="flex-1 w-full">  {/* Added w-full for mobile */}
+                    <Input 
+                      id="companyPhoto" 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={(e) => handleCompanyPhotoUpload(e.target.files?.[0] || null)} 
+                      disabled={form.companyPhotoUploading}
+                    />
+                  </div>
+                  {/* Reference Photo label */}
+                  <div className="flex flex-col items-center w-full md:w-auto">  {/* w-full on mobile, auto on desktop */}
+                    <span className="text-sm font-semibold mb-1 text-gray-700">Reference Photo</span>
+                    <div className="w-full md:w-80 h-48 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+                      <img 
+                        src="companyimg.jpg" 
+                        alt="Reference" 
+                        className="w-full md:w-72 h-auto md:h-44 object-contain md:object-cover rounded"  {/* Responsive width/height */}
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
                       />
                     </div>
-                    {/* Reference Photo label */}
-                    <div className="flex flex-col items-center">
-                      <span className="text-sm font-semibold mb-1 text-gray-700">Reference Photo</span>
-                      <div className="w-80 h-48 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
-                        <img 
-                          src="companyimg.jpg" 
-                          alt="Reference" 
-                          className="w-76 h-44 object-cover rounded"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                          }}
-                        />
-                      </div>
-                    </div>
                   </div>
-                  {form.companyPhotoUploading && (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm text-gray-600">
-                        <span>Uploading...</span>
-                        <span>Please wait</span>
+                </div>
+                {form.companyPhotoUploading && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm text-gray-600">
+                      <span>Uploading...</span>
+                      <span>Please wait</span>
+                    </div>
+                    <Progress value={100} className="h-2" />
+                  </div>
+                )}
+                {form.companyPhotoError && (
+                  <p className="text-red-600 text-sm">{form.companyPhotoError}</p>
+                )}
+                {form.companyPhotoLinks?.length > 0 && (
+                  <div className="space-y-2">
+                    {form.companyPhotoLinks.map((link, i) => (
+                      <div key={i} className="flex items-center gap-4">
+                        <a href={link} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
+                          View uploaded company photo {i + 1}
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => setForm(prev => ({
+                            ...prev,
+                            companyPhotoLinks: prev.companyPhotoLinks.filter((_, idx) => idx !== i)
+                          }))}
+                          className="text-red-600 hover:text-red-800 hover:underline text-sm"
+                        >
+                          Remove photo
+                        </button>
                       </div>
-                      <Progress value={100} className="h-2" />
-                    </div>
-                  )}
-                  {form.companyPhotoError && (
-                    <p className="text-red-600 text-sm">{form.companyPhotoError}</p>
-                  )}
-              {form.companyPhotoLinks?.length > 0 && (
-                <div className="space-y-2">
-                  {form.companyPhotoLinks.map((link, i) => (
-                    <div key={i} className="flex items-center gap-4">
-                      <a href={link} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
-                        View uploaded company photo {i + 1}
-                      </a>
-                      <button
-                        type="button"
-                        onClick={() => setForm(prev => ({
-                          ...prev,
-                          companyPhotoLinks: prev.companyPhotoLinks.filter((_, idx) => idx !== i)
-                        }))}
-                        className="text-red-600 hover:text-red-800 hover:underline text-sm"
-                      >
-                        Remove photo
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-                </div>
+                    ))}
+                  </div>
+                )}
+              </div>
               </div>
             )}
 
@@ -601,46 +600,46 @@ const handleSubmit = async () => {
                       />
                     </div>
                     
-                    <div className="space-y-2">
-                      <Label htmlFor={`photo-${idx}`}>Compressor Photo</Label>
-                      <div className="flex items-center gap-4">
-                        <div className="flex-1">
-                          <Input 
-                            id={`photo-${idx}`}
-                            type="file" 
-                            accept="image/*" 
-                            multiple
-                            onChange={(e) => handleMultipleUploads(idx, e.target.files)} 
-                            disabled={comp.uploading}
+                  <div className="space-y-2">
+                    <Label htmlFor={`photo-${idx}`}>Compressor Photo</Label>
+                    <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+                      <div className="flex-1 w-full">  {/* Added w-full for mobile */}
+                        <Input 
+                          id={`photo-${idx}`}
+                          type="file" 
+                          accept="image/*" 
+                          multiple
+                          onChange={(e) => handleMultipleUploads(idx, e.target.files)} 
+                          disabled={comp.uploading}
+                        />
+                      </div>
+                      {/* Reference Photo label */}
+                      <div className="flex flex-col items-center w-full md:w-auto">  {/* w-full on mobile, auto on desktop */}
+                        <span className="text-sm font-semibold mb-1 text-gray-700">Reference Photo</span>
+                        <div className="w-full md:w-80 h-48 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+                          <img 
+                            src="compressor.png" 
+                            alt="Reference" 
+                            className="w-full md:w-72 h-auto md:h-44 object-contain md:object-cover rounded"  {/* Responsive width/height */}
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
                           />
                         </div>
-                          {/* Reference Photo label */}
-                          <div className="flex flex-col items-center">
-                            <span className="text-sm font-semibold mb-1 text-gray-700">Reference Photo</span>
-                            <div className="w-80 h-48 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
-                              <img 
-                                src="compressor.png" 
-                                alt="Reference" 
-                                className="w-76 h-44 object-cover rounded"
-                                onError={(e) => {
-                                  e.currentTarget.style.display = 'none';
-                                }}
-                              />
-                            </div>
-                          </div>
                       </div>
-                      {comp.uploading && (
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between text-sm text-gray-600">
-                            <span>Uploading...</span>
-                            <span>Please wait</span>
-                          </div>
-                          <Progress value={100} className="h-2" />
+                    </div>
+                    {comp.uploading && (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm text-gray-600">
+                          <span>Uploading...</span>
+                          <span>Please wait</span>
                         </div>
-                      )}
-                      {comp.uploadError && (
-                        <p className="text-red-600 text-sm">{comp.uploadError}</p>
-                      )}
+                        <Progress value={100} className="h-2" />
+                      </div>
+                    )}
+                    {comp.uploadError && (
+                      <p className="text-red-600 text-sm">{comp.uploadError}</p>
+                    )}
                     {comp.photoLinks?.length > 0 && (
                       <div className="space-y-2">
                         {comp.photoLinks.map((link, i) => (
@@ -661,8 +660,7 @@ const handleSubmit = async () => {
                         ))}
                       </div>
                     )}
-
-                    </div>
+                  </div>
                   </div>
                 ))}
               </div>
