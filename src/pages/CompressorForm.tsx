@@ -197,6 +197,7 @@ export default function CompressorForm() {
     } catch (err: any) {
       setForm((prev) => ({ ...prev, companyPhotoUploading: false, companyPhotoError: err?.message || "Upload error" }));
       toast.error("Company photo upload failed. Please try again.");
+      console.log(err);
     }
   };
 
