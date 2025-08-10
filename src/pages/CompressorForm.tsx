@@ -423,15 +423,19 @@ export default function CompressorForm() {
                         disabled={form.companyPhotoUploading}
                       />
                     </div>
-                    <div className="w-80 h-48 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
-                      <img 
-                        src="companyimg.jpg" 
-                        alt="Reference" 
-                        className="w-76 h-44 object-cover rounded"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
+                    {/* Reference Photo label */}
+                    <div className="flex flex-col items-center">
+                      <span className="text-sm font-semibold mb-1 text-gray-700">Reference Photo</span>
+                      <div className="w-80 h-48 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+                        <img 
+                          src="companyimg.jpg" 
+                          alt="Reference" 
+                          className="w-76 h-44 object-cover rounded"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
                   {form.companyPhotoUploading && (
@@ -577,16 +581,20 @@ export default function CompressorForm() {
                             disabled={comp.uploading}
                           />
                         </div>
-                        <div className="w-80 h-48 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
-                          <img 
-                            src="compressor.png" 
-                            alt="Reference" 
-                            className="w-76 h-44 object-cover rounded"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                            }}
-                          />
-                        </div>
+                          {/* Reference Photo label */}
+                          <div className="flex flex-col items-center">
+                            <span className="text-sm font-semibold mb-1 text-gray-700">Reference Photo</span>
+                            <div className="w-80 h-48 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+                              <img 
+                                src="compressor.png" 
+                                alt="Reference" 
+                                className="w-76 h-44 object-cover rounded"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                }}
+                              />
+                            </div>
+                          </div>
                       </div>
                       {comp.uploading && (
                         <div className="space-y-2">
