@@ -25,8 +25,8 @@ const STORAGE_STEP_KEY = "compressorFormStep";
 
 const NAMES = [
   "Debajit Guha", "Avijit Ghosh", "Souvik Santra", "Souvik Sarkar", "Rajib Dey", "Indranath Biswas",
-  "Mintu Chatterjee", "Tanmoy Khamrui", "Sanjib Mondal", "Asim Sarkar", "Amit Sarkar", "Atanu Ghosh",
-  "Surojit Mondal", "Mayukh Bose", "Bidhan Barman"
+  "Mintu Chatterjee", "Tanmoy Khamrui", "Sanjib Kar", "Asim Sarkar", "Amit Sarkar", "Atanu Ghosh",
+  "Surojit Mondal", "Prabir Mondal","Mayukh Bose", "Bidhan Barman"
 ];
 
 const BRANDS = [
